@@ -1,8 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Row, notification, Table, Dropdown } from "antd";
-
 import './index.less'
-
 
 const ResizeTable = (
 	{
