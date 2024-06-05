@@ -1,16 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { LoadingOutlined } from '@ant-design/icons'
 import './index.less'
+
 
 const ResizeTable = (
 	{
+		loading=false,
 		columns=[], dataSource=[],
 		onRightClick=()=>{},
 		onAreaClick=()=>{}
 	}
 ) => {
-	const listenFlag = useRef(false)    // 标志位 确认只添加一次监听事件
 	const canMove = useRef(false)
-	const canData = useRef([])
 	const currentIndex = useRef(-1)     // 当前正在操作的resize line
 	const moveX = useRef(0)             // 鼠标一次点击 X轴移动的距离
 	const tCols = useRef([])        // 表格表头
@@ -112,6 +113,9 @@ const ResizeTable = (
 
 	return (
 		<div className={'rt-wrap'}>
+			<div className={'rt-loading-wrap'} style={{display: loading?'flex':'none'}}>
+				<LoadingOutlined style={{fontSize: '28px'}}/>
+			</div>
 			<div id={'tr-r-l-i'} className={'tr-r-l'} style={{display: 'none'}}>
 				<div className={'resize-line-color-area'}/>
 			</div>
