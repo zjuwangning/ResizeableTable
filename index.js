@@ -7,8 +7,11 @@ const ResizeTable = (
 	{
 		loading=false,
 		columns=[], dataSource=[],
-		onRightClick=()=>{},
-		onAreaClick=()=>{}
+		selectedRowKeys = [],
+		maskedRowKeys = [],
+		rowKey = '',
+		onRow = () => {},
+		onArea = () => {}
 	}
 ) => {
 	const canMove = useRef(false)
@@ -89,27 +92,36 @@ const ResizeTable = (
 		moveX.current = 0
 	}
 
-	// 表格body点击事件 which 1:左键 3:右键
+	// 表格行外区域点击 MouseDown 区分左键 右键
 	const onBodyMouseDown = e => {
-		if (e.nativeEvent.which && e.nativeEvent.which===3) {
-			if (onAreaClick) onAreaClick(e.nativeEvent)
+		e.stopPropagation();
+		if (e.nativeEvent) {
+			if (e.nativeEvent.which===3) onArea().onContextMenu(e)
+			else if (e.nativeEvent.which===1) onArea().onClick(e)
 		}
 	}
 
-	// 表格行点击
+	// 表格行单击 MouseDown 区分左键 右键
 	const onRowMouseDown = (e, index, item) => {
-		console.log('get in onRowMouseDown');
 		e.stopPropagation();
-		if (e.nativeEvent.which && e.nativeEvent.which===3) {
-			if (onRightClick) onRightClick(e.nativeEvent, item)
+		if (e.nativeEvent) {
+			if (e.nativeEvent.which===3) onRow(item).onContextMenu(e)
+			else if (e.nativeEvent.which===1) onRow(item).onClick(e)
 		}
 	}
 
 	// 表格行双击
-	const onRowDoubleClick = () => {
-		console.log('get in onRowDoubleClick');
+	const onRowDoubleClick = (e, index, item) => {
+		onRow(item).onDoubleClick(e)
 	}
 
+	// 获取表格行类名 分为选中/剪切 两种状态
+	const getClassName = (key) => {
+		let temp = 'rt-tr'
+		if (selectedRowKeys.includes(key)) temp+=' rt-tr-s'
+		if (maskedRowKeys.includes(key)) temp+=' rt-tr-m'
+		return temp
+	}
 
 	return (
 		<div className={'rt-wrap'}>
@@ -139,18 +151,25 @@ const ResizeTable = (
 				{
 					list.map((item, index) => {
 						return (
-							<div key={'rt-tr'+index} className={'rt-tr'} onDoubleClick={e=>{onRowDoubleClick(e, index, item)}} onMouseDown={e=>{onRowMouseDown(e, index, item)}}>
-								{
-									tableColumns.map((column, ci)=>{
-										return (
-											<div style={{width: column['width']}} className={ci===0?'rt-td-wrap':'rt-td-wrap rt-td-bo'}>
-												<div key={'rt-td'+ci} className={'rt-td'} >
-													{column['render']?column['render'](item[column['dataIndex']], item):item[column['dataIndex']]}
+							<div
+								key={'rt-tr'+index}
+								className={getClassName(item[rowKey])}
+								onDoubleClick={e=>{onRowDoubleClick(e, index, item)}}
+								onMouseDown={e=>{onRowMouseDown(e, index, item)}}
+							>
+								<div className={'rt-tr-wrap'}>
+									{
+										tableColumns.map((column, ci)=>{
+											return (
+												<div style={{width: column['width']}} className={ci===0?'rt-td-wrap':'rt-td-wrap rt-td-bo'}>
+													<div key={'rt-td'+ci} className={'rt-td'} >
+														{column['render']?column['render'](item[column['dataIndex']], item):item[column['dataIndex']]}
+													</div>
 												</div>
-											</div>
-										)
-									})
-								}
+											)
+										})
+									}
+								</div>
 							</div>
 						)
 					})
